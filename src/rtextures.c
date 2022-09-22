@@ -1238,8 +1238,8 @@ Image ImageTextEx(Font font, const char *text, float fontSize, float spacing, Co
     {
         // Get next codepoint from byte string and glyph index in font
         int codepointByteCount = 0;
-        int codepoint = GetCodepoint(&text[i], &codepointByteCount);    // WARNING: Module required: rtext
-        int index = GetGlyphIndex(font, codepoint);                     // WARNING: Module required: rtext
+        int codepoint = GetCodepointNext(&text[i], &codepointByteCount);    // WARNING: Module required: rtext
+        int index = GetGlyphIndex(font, codepoint);                         // WARNING: Module required: rtext
 
         // NOTE: Normally we exit the decoding sequence as soon as a bad byte is found (and return 0x3f)
         // but we need to draw all of the bad bytes using the '?' symbol moving one byte
@@ -2716,9 +2716,40 @@ void ImageDrawLineV(Image *dst, Vector2 start, Vector2 end, Color color)
 }
 
 // Draw circle within an image
-void ImageDrawCircle(Image *dst, int centerX, int centerY, int radius, Color color)
+void ImageDrawCircle(Image* dst, int centerX, int centerY, int radius, Color color)
 {
-    int x = 0, y = radius;
+    int x = 0;
+    int y = radius;
+    int decesionParameter = 3 - 2*radius;
+
+    while (y >= x)
+    {
+        ImageDrawRectangle(dst, centerX - x, centerY + y, x*2, 1, color);
+        ImageDrawRectangle(dst, centerX - x, centerY - y, x*2, 1, color);
+        ImageDrawRectangle(dst, centerX - y, centerY + x, y*2, 1, color);
+        ImageDrawRectangle(dst, centerX - y, centerY - x, y*2, 1, color);
+        x++;
+
+        if (decesionParameter > 0)
+        {
+            y--;
+            decesionParameter = decesionParameter + 4*(x - y) + 10;
+        } 
+        else decesionParameter = decesionParameter + 4*x + 6;
+    }
+}
+
+// Draw circle within an image (Vector version)
+void ImageDrawCircleV(Image* dst, Vector2 center, int radius, Color color)
+{
+    ImageDrawCircle(dst, (int)center.x, (int)center.y, radius, color);
+}
+
+// Draw circle outline within an image
+void ImageDrawCircleLines(Image *dst, int centerX, int centerY, int radius, Color color)
+{
+    int x = 0;
+    int y = radius;
     int decesionParameter = 3 - 2*radius;
 
     while (y >= x)
@@ -2742,10 +2773,10 @@ void ImageDrawCircle(Image *dst, int centerX, int centerY, int radius, Color col
     }
 }
 
-// Draw circle within an image (Vector version)
-void ImageDrawCircleV(Image *dst, Vector2 center, int radius, Color color)
+// Draw circle outline within an image (Vector version)
+void ImageDrawCircleLinesV(Image *dst, Vector2 center, int radius, Color color)
 {
-    ImageDrawCircle(dst, (int)center.x, (int)center.y, radius, color);
+    ImageDrawCircleLines(dst, (int)center.x, (int)center.y, radius, color);
 }
 
 // Draw rectangle within an image
